@@ -1,0 +1,102 @@
+stages:
+  - build
+  - code_style
+  - test
+  - deploy
+
+variables:
+  BUILD_DIR: build
+build:
+  stage: build
+  script:
+    - mkdir -p $BUILD_DIR/src/grep
+    - mkdir -p $BUILD_DIR/src/cat
+    - mkdir -p $BUILD_DIR/src/deploy
+    - cp -r src/grep/* $BUILD_DIR/src/grep/
+    - cp -r src/cat/* $BUILD_DIR/src/cat/
+    - cp -r src/deploy/* $BUILD_DIR/src/deploy/
+    - cd $BUILD_DIR/src/grep
+    - make || { echo "Make failed for grep"; exit 1; }
+    - cd ../cat
+    - make || { echo "Make failed for cat"; exit 1; }
+    - cd ..
+    - ls -lR
+  artifacts:
+    paths:
+      - $BUILD_DIR/src/cat
+      - $BUILD_DIR/src/grep
+      - $BUILD_DIR/src/deploy
+    expire_in: 30 days
+
+
+code_style_check:
+  stage: code_style
+  before_script:
+    - apt-get update
+    - apt-get install -y clang-format
+  script:
+    - cp materials/linters/.clang-format .
+    - clang-format --version
+    - clang-format -i src/grep/*.c src/cat/*.c
+    - git diff || (echo "Code style issues found. Please run clang-format and commit changes." && git diff)
+  allow_failure: false
+
+
+integration_tests:
+  stage: test
+  script:
+    - echo "Running integration tests..."
+    - cd $BUILD_DIR/src/grep
+    - make test || { echo "Integration tests failed"; exit 1; }
+    - cd ../cat
+    - make test || { echo "Integration tests failed"; exit 1; }
+    - echo "Integration tests passed"
+  needs:
+    - build
+    - code_style_check
+  allow_failure: false
+
+
+deploy:
+  stage: deploy
+  before_script:
+    # Настраиваем SSH
+    - mkdir -p ~/.ssh
+    # Создаем файл с приватным ключом и даем ему права 400
+    - echo -e "$SSH_PRIVATE_KEY" | base64 -d > ~/.ssh/id_rsa
+
+    - chmod 400 ~/.ssh/id_rsa
+    
+    # Добавляем ключ в ssh-agent
+    - eval $(ssh-agent -s)
+    - ssh-add ~/.ssh/id_rsa
+    
+    # Добавляем хост для SSH
+    - ssh-keyscan -p 2222 172.20.82.48 >> ~/.ssh/known_hosts
+  script:
+    # Выполняем скрипт деплоя
+    - cd $BUILD_DIR/src/
+    - cd deploy
+    - chmod +x deploy.sh
+    - ./deploy.sh
+    - ls -l .
+  when: manual
+  allow_failure: false
+  needs:
+    - build
+    - code_style_check
+    - integration_tests
+
+
+
+
+after_script:
+  - cd $BUILD_DIR/src/deploy
+  - ls -l
+  - |
+    if [ ! -f "telegram_bot.sh" ]; then
+      echo "Error: send_telegram_message.sh not found!"
+      exit 1
+    fi
+  - ./telegram_bot.sh "$CI_JOB_STAGE" "$CI_JOB_STATUS" "$CI_PROJECT_NAME" "$CI_PROJECT_URL" "$CI_PIPELINE_ID" "$CI_COMMIT_BRANCH" || { echo "telegram_bot.sh failed"; exit 1; }
+  - echo "send_telegram_message.sh executed successfully"

@@ -1,0 +1,23 @@
+19.09.2024_00:00:01 cat test1.txt - SUCCESS
+19.09.2024_00:00:01 -e cat test1.txt - SUCCESS
+19.09.2024_00:00:01 -e cat -e grep test1.txt - SUCCESS
+19.09.2024_00:00:01 -e cat -e grep test1.txt test2.txt - SUCCESS
+19.09.2024_00:00:01 -i cat test1.txt - SUCCESS
+19.09.2024_00:00:01 -v cat test1.txt - SUCCESS
+19.09.2024_00:00:01 -c cat test1.txt - SUCCESS
+19.09.2024_00:00:01 -l cat test1.txt - SUCCESS
+19.09.2024_00:00:01 -n cat test1.txt - SUCCESS
+19.09.2024_00:00:01 -h cat test1.txt - SUCCESS
+19.09.2024_00:00:01 -o cat test1.txt - SUCCESS
+19.09.2024_00:00:01 -s cat test1.txt - SUCCESS
+19.09.2024_00:00:01 -e cat -e grep test1.txt test2.txt ../nofile.txt - SUCCESS
+19.09.2024_00:00:01 -f reg_exmpl.txt test1.txt test2.txt - SUCCESS
+19.09.2024_00:00:01 -i -e less -e grep test1.txt test2.txt - SUCCESS
+19.09.2024_00:00:01 -v -e less -e grep test1.txt test2.txt - SUCCESS
+19.09.2024_00:00:01 -c -e less -e grep test1.txt test2.txt - SUCCESS
+19.09.2024_00:00:01 -l -e less -e grep test1.txt test2.txt - SUCCESS
+19.09.2024_00:00:01 -n -e less -e grep test1.txt test2.txt - SUCCESS
+19.09.2024_00:00:01 -h -e less -e grep test1.txt test2.txt - SUCCESS
+19.09.2024_00:00:01 -o -e less -e grep test1.txt test2.txt - SUCCESS
+19.09.2024_00:00:01 -s -e less -e grep test1.txt test2.txt - SUCCESS
+19.09.2024_00:00:01 less -l test1.txt test2.txt - SUCCESS
